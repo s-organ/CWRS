@@ -1,0 +1,53 @@
+############ paramaters ###########################
+# x = your data, just make sure theres no missing values and everything is numeric
+# method = whatever method you want to use, use pearson for parameteric or spearman/kendall for the non-parametric tests
+
+
+#### output #############################
+# estimate = the partial correlation matrix, each cell in the matrix corresponds to the partial correlation
+# value between the column and row name
+# p.value = the p-value, if its less than 0.05 your partial correlation is significant
+# statistic = the test statistic, you can ignore that
+# method = whatever method you used
+
+### example #######
+# test <- pcor(x, method = "kendall")
+
+
+
+pcor <- function(x, method = c("pearson", "kendall", "spearman"))
+{
+  method <- match.arg(method)
+  
+  if (is.data.frame(x)) 
+    x <- as.matrix(x)
+  if (!is.matrix(x)) 
+    stop("supply a matrix-like 'x'")
+  if (!(is.numeric(x) || is.logical(x))) 
+    stop("'x' must be numeric")
+  stopifnot(is.atomic(x))
+  n <- dim(x)[1]
+  gp <- dim(x)[2]-2
+  cvx <- cov(x,method=method)
+  if(det(cvx) < .Machine$double.eps){
+    warning("The inverse of variance-covariance matrix is calculated using Moore-Penrose generalized matrix invers due to its determinant of zero.")
+    icvx <- ginv(cvx)
+  }else
+    icvx <- solve(cvx)
+  pcor <- -cov2cor(icvx)
+  diag(pcor) <- 1
+  if(method == "kendall"){
+    statistic <- pcor/sqrt(2*(2*(n-gp)+5)/(9*(n-gp)*(n-1-gp)))
+    p.value <- 2*pnorm(-abs(statistic))
+    
+  }else{
+    statistic <- pcor*sqrt((n-2-gp)/(1-pcor^2))
+    p.value <- 2*pt(-abs(statistic),(n-2-gp))
+  }
+  
+  diag(statistic) <- 0
+  diag(p.value) <- 0
+  
+  list(estimate=pcor,p.value=p.value,statistic=statistic,method=method)
+}
+
