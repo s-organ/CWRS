@@ -9,7 +9,6 @@
 #     4. Visualize response curves for different predictors
 #     5. choose optimal bound
 #
-#   All data used here is synthetic and reproducible.
 ##############################################################
 
 # ------------------------------------------------------------
